@@ -1,0 +1,20 @@
+{
+  "name": "naita-diary-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "bin": {
+    "naita-diary": "src/app.ts"
+  },
+  "scripts": {
+    "start": "bun run src/app.ts",
+    "cli": "bun run src/cli.mjs",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.65",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "pdf-lib": "^1.17.1"
+  }
+}
