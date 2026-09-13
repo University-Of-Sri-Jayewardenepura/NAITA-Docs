@@ -1,0 +1,14 @@
+{
+  "name": "Sample Trainee",
+  "privateAddress": "12 Sample Road, Colombo",
+  "phone": "011 123 4567",
+  "category": "Undergraduate",
+  "field": "Information and Communication Technology",
+  "instituteRegistration": "ICT/TEST/001",
+  "naitaRegistration": "TEST/001",
+  "establishment": "Example Software Team",
+  "trainingLocation": "Colombo office",
+  "trainingStart": "2026-04-06",
+  "trainingEnd": "2026-04-17",
+  "workingDays": [1, 2, 3, 4, 5]
+}

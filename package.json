@@ -1,20 +1,42 @@
 {
   "name": "naita-diary-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "type": "module",
-  "packageManager": "bun@1.3.14",
   "bin": {
-    "naita-diary": "src/app.ts"
+    "naita-diary": "src/cli.mts"
   },
+  "type": "module",
   "scripts": {
     "start": "bun run src/app.ts",
-    "cli": "bun run src/cli.mjs",
-    "test": "bun test"
+    "cli": "bun run src/cli.mts",
+    "cli:bun": "bun run src/cli.mts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:tui": "bun test tests/tui",
+    "test:all": "bun run format:check && bun run lint && bun run test && bun run test:tui && bun run test:e2e && bun run typecheck",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src tests",
+    "format": "oxfmt src tests docs README.md AGENTS.md package.json tsconfig.json vitest.config.mts playwright.config.mts",
+    "format:check": "oxfmt --check src tests docs README.md AGENTS.md package.json tsconfig.json vitest.config.mts playwright.config.mts"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.65",
+    "@opentui/core": "^0.5.11",
     "@pdf-lib/fontkit": "^1.1.1",
     "pdf-lib": "^1.17.1"
-  }
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/bun": "^1.3.0",
+    "@types/node": "^24.0.0",
+    "oxfmt": "0.67.0",
+    "oxlint": "1.82.0",
+    "pdfjs-dist": "6.3.289",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.0"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "packageManager": "bun@1.4.2"
 }
