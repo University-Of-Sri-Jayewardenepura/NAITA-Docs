@@ -2,7 +2,9 @@
 
 A Bun CLI and OpenTUI terminal interface for filling the supplied
 `Daily Diary.pdf`. The diary is saved week by week so you can come back to any
-step, add information later, or edit the files yourself.
+step, add information later, or edit the files yourself. All student data lives
+in one Git-ignored `local/` folder inside the workspace: profile, cached Git
+history, weekly notes, screenshots, change history, and generated PDFs.
 
 Each week contains short bullet points for:
 
@@ -47,6 +49,8 @@ bun run cli -- status
 
 Every command supports `--workspace PATH` and `--json`. The workspace defaults to
 your current directory; the bundled template is located relative to the program.
+For example, `--workspace C:\diaries\student` stores files under
+`C:\diaries\student\local`. Pass the parent workspace, not its `local` folder.
 The CLI does not require the OpenTUI runtime. `naita-diary` points to the scripted
 CLI; `bun run start` opens the terminal menu.
 
@@ -66,6 +70,9 @@ your own information. Training start/end dates are needed to create week files;
 other profile fields can be completed later. Name and establishment are also
 required for PDF export. Status lists every unfilled profile field, distinguishing
 required fields from optional ones.
+`init` creates all week files and empty screenshot folders as soon as both
+training dates are set. Completing those dates through `profile` also creates
+them. Re-running initialization keeps existing notes and screenshots.
 
 Read one or more local repositories, including repositories outside this project:
 
@@ -76,10 +83,18 @@ bun run cli -- import --repo ../frontend --repo ../backend --author "you@example
 
 Use `--author` in a shared repository so other contributors' commits are not
 attributed to you. Without it, all authors are included. Re-running `import`
-without `--repo` refreshes the previously saved repositories. Supplying `--repo`
-sets the full repository list. Re-importing preserves accepted points and manual
-edits. Git reads all branches, excludes merges, deduplicates identical hashes
+without `--repo` refreshes all previously saved repositories. Supplying `--repo`
+adds or refreshes those sources while retaining cached evidence from the others.
+To change the author filter, refresh all saved sources together. Re-importing
+preserves accepted points and manual edits. Git reads all branches, excludes merges, deduplicates identical hashes
 across repositories, and retains subjects, bodies, authors, and full hashes.
+
+The first import persists this evidence in `local/state.json`. Later `show`,
+`context`, `draft`, and `generate` commands reuse it without reading Git again;
+they work even when the original repositories are unavailable. Use `import`
+explicitly when you want new commits (or pass `generate --repo PATH`). Refreshing
+a source updates its current evidence, including removal of commits no longer
+in its history; previous imports remain available in the change log.
 
 Dates use the author's calendar date in the commit's recorded timezone. Filtering
 does not use Git's committer-date `--since`, so rebasing work later does not remove
@@ -141,14 +156,62 @@ input restored the list." Keep the technical detail that explains what you did;
 avoid inflated claims. If there were no problems, write that explicitly. A proposed
 improvement for next week should not read as completed work.
 
+## Checklist: write first, screenshots last
+
+```sh
+bun run cli -- checklist
+bun run cli -- checklist --week 2
+bun run cli -- checklist --week 2 --json
+```
+
+`init` saves a checklist under `local/`. After reading Git history, `import`
+prints an updated task list and screenshot plan. The OpenTUI home menu includes
+**Checklist and screenshot plan**; each week's screenshot menu also has **What
+screenshots should I add?**
+
+Work through the profile, attendance, Git import and written notes first. Then
+use the checklist to collect real screenshots as the last content step, followed
+by reviewing each week and exporting the completed PDF. Missing images never
+block writing, importing evidence, or generating a draft.
+
+Each week lists its dates, outstanding tasks, exact screenshot destination folder,
+optional filenames, and ideas for what to capture. For example, a search commit
+suggests showing the input and resulting list; an API commit suggests a request
+and response; a test commit suggests the command and actual test output. Ideas
+cite the cached commits and source repository paths. Student-supplied work notes
+also get ideas, including activities with no Git commit. Commits on leave,
+medical, or other non-working dates do not become capture suggestions.
+
+These are rule-based suggestions from Git messages and saved notes, not verified
+screens, test results, or instructions to reproduce old work. Choose representative
+images; one per commit is not required. Verify that the image matches the actual
+week and activity, and redact secrets/private data. When no visual evidence is
+suitable, supply a reason through `screenshots --week NUMBER --reason TEXT`.
+
+`local/CHECKLIST.md` is the readable report; `local/checklist.json` contains the
+same structured tasks and capture ideas for agents. Normal commands refresh both
+from saved data, including screenshots you add later; no AI or fresh Git read is
+needed. `--week` filters the CLI view but leaves the saved whole-diary checklist
+intact. Dry runs, `help`, and `agent-guide` do not rewrite reports.
+
+The reports are generated, so do not manually tick or edit them: change the diary
+notes, attendance, images or captions instead. Task ticks reflect saved content;
+image presence does not verify what an image depicts. Derived reports are not
+recorded as student edits in the history log. The final export task is complete
+only after a completed PDF export, and becomes pending again after diary changes.
+
 ## Screenshot folders and manual editing
 
-`weeks` creates a local structure like:
+`init` (once training dates are provided) creates this structure. `weeks` can
+also ensure the folders exist or show their full paths:
 
 ```text
-naita-diary.json
-diary/
-  state.json
+local/
+  .gitignore                           # ignores everything in this folder
+  profile.json                         # student and training details
+  state.json                           # cached commits, repositories, attendance
+  CHECKLIST.md                         # readable task list and weekly capture guide
+  checklist.json                       # same live checklist for CLI/agents
   weeks/
     week-01-2026-04-06.json
     week-02-2026-04-13.json
@@ -157,6 +220,10 @@ diary/
       01-task-list.png
       02-search-result.jpg
     week-02-2026-04-13/
+  history/
+    changes.jsonl                      # timestamped before/after change records
+  output/
+    NAITA-Daily-Diary.pdf               # created by generate
 ```
 
 Put screenshots of your work in the matching folder. PNG, JPG, and JPEG files are
@@ -181,7 +248,40 @@ files. Malformed files produce an error instead of being silently replaced.
 Changing training dates after weeks exist is blocked to avoid losing entries;
 use a different workspace for another training period.
 
-Profiles, diary data, screenshots, and generated output are ignored by Git.
+The entire `local/` folder is ignored by Git, including in an external workspace.
+Back up or copy the whole folder to keep the diary and its history together.
+
+Older workspaces using `naita-diary.json`, `diary/`, and `output/` are copied into
+`local/` on the next normal command. The old files remain as a backup; subsequent
+commands use only `local/`. Dry runs can read the old structure without copying
+it. Existing `local/` data is never replaced by another migration.
+
+## Log manual and AI-assisted changes
+
+Use `add --before POINT_ID` to insert a student-supplied activity between existing
+points, even when it has no Git commit. It is saved with `source: "manual"` and
+empty commit evidence. `edit` changes or removes an individual point; imports
+and AI drafts preserve its placement and wording.
+
+```sh
+bun run cli -- show --week 1 --json
+bun run cli -- add --week 1 --section work --before POINT_ID --text "Discussed the search design with my supervisor." --actor codex --reason "Activity supplied by the student."
+bun run cli -- history --week 1 --json
+```
+
+`local/history/changes.jsonl` is append-only JSON Lines: each event records its
+time, command, optional actor/reason, and changed files with their previous and
+new values. Full JSON values preserve point IDs, sources, ordering, removals,
+accepted/dismissed proposals, attendance, and cached Git evidence. Actor labels
+are caller-supplied, not proof of identity. Exports record their path/page count;
+screenshot changes record names, hashes and sizes, not duplicate image bytes.
+
+Direct JSON edits are detected as `external-edit` on the next command, including
+`status`, `show`, or `history`. These are observed changes, not a live editor log:
+multiple saves between commands appear as one change, timestamped when observed.
+Read-only dry runs, `help`, and `agent-guide` never checkpoint or migrate files.
+The journal preserves earlier text, but does not itself replay changes into the
+current diary; use the CLI to restore a point after inspecting its history.
 
 ## Progress and PDF export
 
@@ -190,7 +290,7 @@ bun run cli -- status
 bun run cli -- status --week 1 --json
 bun run cli -- review --week 1
 bun run cli -- generate
-bun run cli -- generate --strict --out output/completed-diary.pdf
+bun run cli -- generate --strict --out local/output/completed-diary.pdf
 bun run cli -- generate --repo ../student-project --dry-run
 ```
 
@@ -200,7 +300,8 @@ filled sections, work dates, and the screenshot step. A week is ready only when
 those are filled, absences are confirmed, suggestions and attendance conflicts
 are resolved, required profile fields exist, and the week has been reviewed.
 Editing notes, attendance, profile data, Git evidence, captions, or screenshot
-contents invalidates the affected review.
+contents invalidates the affected review. PDF export defaults to
+`local/output/NAITA-Daily-Diary.pdf`; `--out` overrides that location.
 
 Draft exports can contain unfinished areas, visibly marked "Not filled in yet."
 Unaccepted suggestions never enter the PDF. Leave and medical dates must be
@@ -225,7 +326,7 @@ bun run cli -- agent-guide
 bun run cli -- context --week 1 --prompt
 bun run cli -- draft --week 1 --agent codex
 bun run cli -- draft --week 1 --agent claude
-bun run cli -- draft --week 1 --from response.json
+bun run cli -- draft --week 1 --from local/agent-response.json
 ```
 
 See [the agent workflow](docs/AI-WORKFLOW.md) for the JSON contract and instructions

@@ -4,6 +4,12 @@ Keep the entry points small. CLI commands belong in `src/cli`, diary rules and
 persistence in `src/diary`, Git reading in `src/git`, writing proposals in `src/ai`,
 PDF placement in `src/pdf`, and terminal views in `src/tui`.
 
+Student data belongs under the workspace's Git-ignored `local/` directory.
+Use the shared paths helper for profile, cached evidence, weekly notes, screenshots,
+change history, and output. Keep manual edits and cached evidence reusable offline.
+The checklist reports are derived from that data; keep screenshot ideas optional,
+evidence-linked, and scheduled after writing, without claiming image verification.
+
 When helping fill an internship diary, read `docs/AI-WORKFLOW.md` and use the CLI
 commands described there. Preserve manually edited entries, keep generated
 suggestions separate from accepted facts, and do not invent experience or leave
