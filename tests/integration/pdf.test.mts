@@ -33,6 +33,8 @@ it('fills the supplied PDF with weekly bullets and images, while preserving temp
   expect(result.pages).toBe(11);
   const pages = await pdfPages(out);
   expect(pages[1].text).toContain(PROFILE.name);
+  const profileValue = pages[1].items.find((item) => item.str === PROFILE.name);
+  expect(profileValue?.transform[5]).toBeGreaterThan(710.02);
   expect(pages[2].text).toContain('Authorized leave.');
   expect(pages[2].text).toContain('Added a search box');
   expect(pages[3].text).toContain('How they were solved');

@@ -53,9 +53,10 @@ export function drawSingleLine(page, value, x, y, width, font, preferred = 10, c
   if (clearDots)
     page.drawRectangle({
       x: x - 1,
-      y: y - 3,
+      // The source dotted guide is four points below the raised value.
+      y: y - 7,
       width: font.widthOfTextAtSize(printable(value), size) + 3,
-      height: size + 6,
+      height: size + 10,
       color: rgb(1, 1, 1),
     });
   drawText(page, value, x, y, size, font);

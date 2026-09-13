@@ -3,20 +3,22 @@ import { rgb } from 'pdf-lib';
 import { dailyPoints } from '../diary/entries.mts';
 import { drawText, drawSingleLine, bulletLines } from './layout.mts';
 
+const PROFILE_TEXT_RISE = 4;
+
 export function drawInfo(page, config, font) {
   const entries = [
-    ['name', 94, 710.02, 425],
-    ['privateAddress', 207, 689.38, 310],
-    ['phone', 178, 668.62, 337],
-    ['category', 110, 647.98, 405],
-    ['field', 178, 627.22, 337],
-    ['instituteRegistration', 365, 606.58, 150],
-    ['naitaRegistration', 269, 585.79, 246],
-    ['establishment', 242, 565.15, 273],
+    ['name', 94, 710.02 + PROFILE_TEXT_RISE, 425],
+    ['privateAddress', 207, 689.38 + PROFILE_TEXT_RISE, 310],
+    ['phone', 178, 668.62 + PROFILE_TEXT_RISE, 337],
+    ['category', 110, 647.98 + PROFILE_TEXT_RISE, 405],
+    ['field', 178, 627.22 + PROFILE_TEXT_RISE, 337],
+    ['instituteRegistration', 365, 606.58 + PROFILE_TEXT_RISE, 150],
+    ['naitaRegistration', 269, 585.79 + PROFILE_TEXT_RISE, 246],
+    ['establishment', 242, 565.15 + PROFILE_TEXT_RISE, 273],
   ];
   for (const [key, x, y, width] of entries) drawSingleLine(page, config[key], x, y, width, font, 10, true);
-  drawSingleLine(page, displayDate(config.trainingStart), 258, 544.51, 80, font, 9, true);
-  drawSingleLine(page, displayDate(config.trainingEnd), 375, 544.51, 140, font, 9, true);
+  drawSingleLine(page, displayDate(config.trainingStart), 258, 544.51 + PROFILE_TEXT_RISE, 80, font, 9, true);
+  drawSingleLine(page, displayDate(config.trainingEnd), 375, 544.51 + PROFILE_TEXT_RISE, 140, font, 9, true);
 }
 export function drawWeek(page, week, config, font) {
   for (const [x, y, width, height] of [
