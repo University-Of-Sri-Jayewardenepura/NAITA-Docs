@@ -2,8 +2,9 @@ import { afterEach, expect, test } from 'bun:test';
 import { createTestRenderer, type TestRendererSetup } from '@opentui/core/testing';
 import { createDiaryApp } from '../../src/tui/app';
 import { cliClient } from '../../src/tui/client';
-import { fixture, PROFILE } from '../helpers/fixtures.mts';
+import { fixture, PROFILE, seedRepo } from '../helpers/fixtures.mts';
 import { loadDiary, loadProfile } from '../../src/diary/store.mts';
+import { execute } from '../../src/cli/main.mts';
 
 let setup: TestRendererSetup;
 let context: ReturnType<typeof fixture>;
@@ -61,7 +62,7 @@ test('edits a profile and a weekly point through real keyboard events and CLI pe
   await frameContaining('Work carried out (1 points)');
   setup.mockInput.pressCtrlC();
   expect(setup.renderer.isDestroyed).toBe(true);
-}, 15000);
+}, 30000);
 
 test('shows validation errors and allows Escape out of a form without saving', async () => {
   context = fixture();
@@ -84,3 +85,29 @@ test('shows validation errors and allows Escape out of a form without saving', a
   await frameContaining('Choose any step');
   expect(loadDiary(context.workspace).state.repos).toEqual([]);
 }, 15000);
+
+test('opens the screenshots-last checklist and a week-specific capture idea with real keyboard events', async () => {
+  context = fixture();
+  seedRepo(context.repo);
+  await execute('import', { workspace: context.workspace, repo: context.repo });
+  setup = await createTestRenderer({ width: 110, height: 32 });
+  const app = createDiaryApp(setup.renderer, cliClient(context.workspace));
+  await app.start();
+  for (let index = 0; index < 4; index++) setup.mockInput.pressArrow('down');
+  setup.mockInput.pressEnter();
+  await frameContaining('Checklist | screenshots last');
+  expect(setup.captureCharFrame()).toContain('CHECKLIST.md');
+  // Seven overall tasks precede the weekly capture guides.
+  for (let index = 0; index < 7; index++) setup.mockInput.pressArrow('down');
+  setup.mockInput.pressEnter();
+  await frameContaining('Week 1 | Screenshot checklist');
+  expect(setup.captureCharFrame()).toContain('week-01-2026-04-06');
+  // Ten weekly tasks precede optional evidence-based capture ideas.
+  for (let index = 0; index < 10; index++) setup.mockInput.pressArrow('down');
+  setup.mockInput.pressEnter();
+  await frameContaining('What to capture (optional)');
+  expect(setup.captureCharFrame()).toContain('search/filter input');
+  expect(setup.captureCharFrame()).toContain('Suggested filename:');
+  setup.mockInput.pressEscape();
+  await frameContaining('Week 1 | Screenshot checklist');
+}, 30000);

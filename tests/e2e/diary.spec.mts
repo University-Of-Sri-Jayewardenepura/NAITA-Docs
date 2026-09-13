@@ -116,6 +116,9 @@ test('CLI-to-PDF workflow: two weeks, reviewed points, manual edits, PNG/JPEG sc
   cli(workspace, 'review', { week: 1 });
   const result = cli(workspace, 'generate', { out: outputPdf, strict: true });
   expect(result.pages).toBe(11);
+  const checklist = cli(workspace, 'checklist');
+  expect(checklist.complete).toBe(true);
+  expect(checklist.tasks.every((task) => task.done)).toBe(true);
   const browserErrors = [];
   page.on('pageerror', (error) => browserErrors.push(error.message));
   await page.goto(baseURL);

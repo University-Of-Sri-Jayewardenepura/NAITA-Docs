@@ -1,9 +1,9 @@
 import { afterEach, expect, it } from 'vitest';
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fixture, seedRepo, cli, screenshot, PROFILE } from '../helpers/fixtures.mts';
 import { execute } from '../../src/cli/main.mts';
-import { loadDiary, readJson, saveProfile } from '../../src/diary/store.mts';
+import { loadDiary, readJson, saveProfile, paths } from '../../src/diary/store.mts';
 import { SECTIONS } from '../../src/diary/entries.mts';
 
 let context;
@@ -44,12 +44,15 @@ it('can start with dates, add notes before import, and preserve CLI and manual e
 it('keeps a dry run read-only and refuses to guess absences in non-interactive mode', () => {
   context = fixture();
   seedRepo(context.repo);
+  const location = paths(context.workspace);
+  const before = readdirSync(location.local, { recursive: true });
   const result = cli(context.workspace, 'generate', { repo: context.repo, 'dry-run': true });
   expect(result.weeks).toHaveLength(2);
   expect(result.state.commits).toHaveLength(3);
-  expect(existsSync(join(context.workspace, 'diary'))).toBe(false);
+  expect(readdirSync(location.local, { recursive: true })).toEqual(before);
+  expect(existsSync(location.state)).toBe(false);
   expect(() => cli(context.workspace, 'generate', { repo: context.repo })).toThrow(/must be supplied/);
-  expect(existsSync(join(context.workspace, 'diary'))).toBe(false);
+  expect(existsSync(location.state)).toBe(false);
 });
 
 it('reports section/day/screenshot gaps, then invalidates review after manual edits or image changes', async () => {
