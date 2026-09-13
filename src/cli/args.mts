@@ -1,11 +1,13 @@
 import { parseArgs as parseNodeArgs } from 'node:util';
 
-const shared = ['workspace', 'json'];
+const shared = ['workspace', 'json', 'actor', 'reason'];
 const commandOptions = {
   help: [],
   init: ['from'],
   profile: ['from', 'field', 'text'],
   status: ['week'],
+  checklist: ['week'],
+  history: ['week'],
   show: ['week'],
   weeks: [],
   import: ['repo', 'author', 'leave', 'medical', 'off'],

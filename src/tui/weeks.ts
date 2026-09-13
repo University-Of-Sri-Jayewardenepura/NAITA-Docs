@@ -1,6 +1,7 @@
 import { SECTIONS } from '../diary/entries.mts';
 import { DiaryShell, type Choice } from './shell';
 import type { CommandRunner } from './client';
+import { showChecklist } from './checklist';
 
 export class WeekScreens {
   constructor(
@@ -197,6 +198,10 @@ export class WeekScreens {
     const result = await this.run('screenshots', { week: String(number) });
     const back = () => this.screenshots(number);
     const choices: Choice[] = [
+      {
+        name: 'What screenshots should I add? (checklist)',
+        action: () => showChecklist(this.ui, this.run, back, number),
+      },
       { name: 'Refresh folder', action: back },
       {
         name: 'Set or clear a reason for no screenshots',

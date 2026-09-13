@@ -3,6 +3,7 @@ import { PROFILE_FIELDS } from '../diary/profile.mts';
 import { DiaryShell } from './shell';
 import { WeekScreens } from './weeks';
 import type { CommandRunner } from './client';
+import { showChecklist } from './checklist';
 
 export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
   const ui = new DiaryShell(renderer);
@@ -28,6 +29,11 @@ export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
           name: 'Leave and non-working dates',
           description: 'Confirm leave and medical dates, even when there are none',
           action: attendance,
+        },
+        {
+          name: 'Checklist and screenshot plan',
+          description: 'Write first; see what to capture and which week folder to use',
+          action: () => showChecklist(ui, run, home),
         },
         {
           name: 'Export PDF',
@@ -71,7 +77,7 @@ export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
       ],
       async (values) => {
         await run('import', values);
-        await home();
+        await showChecklist(ui, run, home);
       },
       home,
     );
@@ -111,7 +117,7 @@ export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
     const exportPdf = (strict: boolean) =>
       ui.form(
         'Export PDF',
-        [{ key: 'out', label: 'Output PDF path (blank for output/NAITA-Daily-Diary.pdf)', optional: true }],
+        [{ key: 'out', label: 'Output PDF path (blank for local/output/NAITA-Daily-Diary.pdf)', optional: true }],
         async ({ out }) => {
           const result = await run('generate', { strict, ...(out ? { out } : {}) });
           ui.show('PDF created', result.message, [{ name: 'Back to diary', action: home }], home);

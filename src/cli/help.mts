@@ -2,14 +2,16 @@ export const HELP = `NAITA internship diary
 
 Usage: bun run cli -- COMMAND [options]
 Every command supports --workspace PATH (default: current directory) and --json.
+Student files and default PDFs live under WORKSPACE/local/ (ignored by Git).
+Use --actor NAME and --reason TEXT to annotate a change in the local history.
 Run bun run start for the terminal menu. Steps can be revisited independently.
 
 Profile and evidence
-  init [--from profile.json]              Collect or import a student profile
+  init [--from profile.json]              Save profile; create weeks/screenshot folders
   profile [--field KEY --text VALUE]       View or edit one profile field
           [--from profile.json]           Merge profile fields from JSON
   weeks                                  Create week files and screenshot folders
-  import --repo PATH [--repo PATH ...]    Read local Git histories; preserve notes
+  import [--repo PATH ...]               Cache/refresh sources; omitted sources stay cached
          [--author NAME-OR-EMAIL]         Filter commits to the trainee (recommended)
   absence --leave DATES --medical DATES  Save attendance; use "" for none
           [--off DATES]                  Extra non-working dates/holidays
@@ -24,7 +26,7 @@ Weekly writing (week is a number or Monday date)
   draft [--week 1]                       Prepare Git-based suggestions/questions
         [--agent codex|claude]           Optional installed writing agent
         [--agent-command COMMAND]       Explicit custom shell command
-        [--from response.json]          Import agent suggestions for review
+        [--from local/response.json]    Import agent suggestions for review
   accept --week 1 --id ID [--text ANSWER] [--before POINT_ID]
          [--accept-drafts]               Accept all factual work drafts in a week
   dismiss --week 1 --id ID               Dismiss a suggestion without adding it
@@ -33,6 +35,8 @@ Weekly writing (week is a number or Monday date)
               --reason "No visual work" Mark screenshots not needed; "" clears it
   review --week 1                        Mark a filled week reviewed
   status [--week 1]                      Show content, screenshots, review, and gaps
+  checklist [--week 1]                   Tasks + Git-based screenshot ideas and exact folders
+  history [--week 1]                     Read the append-only JSON change history
 
 Agent workflow and PDF
   agent-guide                            Instructions for AI agents using this CLI
@@ -50,4 +54,11 @@ Default work schedule: Monday-Friday; weekend commits count as work.
 suggestions/attendance conflicts, confirmed absences, and a current review.
 Unaccepted suggestions never appear in the PDF. Manual week JSON edits are read
 on every command. Re-importing or re-drafting never replaces accepted points.
+Draft/context/generate reuse local/state.json without accessing source repos.
+Run import to refresh all saved repos, or --repo PATH to refresh/add selected ones.
+Default PDF: local/output/NAITA-Daily-Diary.pdf. Direct file edits are logged on
+the next command; help, agent-guide, and generate --dry-run do not write logs.
+Init/import and normal commands refresh local/CHECKLIST.md and checklist.json.
+Import also prints the checklist. Write notes first; add screenshots last, then
+review/export. Capture ideas are optional, not proof of a screen or test result.
 `;
