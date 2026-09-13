@@ -8,11 +8,15 @@ export async function runAgent(options, prompt, workspace) {
   const executable = custom || options.agent;
   if (!executable) throw new Error('Choose an agent or import its suggestions with --from FILE.');
   const args = custom
-    ? ['sh', '-c', custom]
+    ? process.platform === 'win32'
+      ? [process.env.ComSpec || 'cmd.exe', '/d', '/s', '/c', `"${custom}"`]
+      : ['sh', '-c', custom]
     : options.agent === 'codex'
       ? ['exec', '--skip-git-repo-check', '--sandbox', 'read-only', '-']
       : ['-p'];
-  const result = await run(custom ? args : [executable, ...args], workspace, prompt, 180000);
+  const result = await run(custom ? args : [executable, ...args], workspace, prompt, 180000, {
+    windowsVerbatimArguments: Boolean(custom && process.platform === 'win32'),
+  });
   if (!result.success) throw new Error(`Writing agent failed: ${result.stderr.slice(-10000) || 'process failed'}`);
   if (result.stdout.length > 5 * 1024 * 1024) throw new Error('Agent response exceeded 5 MB.');
   try {

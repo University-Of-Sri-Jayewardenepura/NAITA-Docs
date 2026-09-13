@@ -1,9 +1,11 @@
+import { fileURLToPath } from 'node:url';
+
 export type CommandRunner = (command: string, options?: Record<string, string | boolean>) => Promise<any>;
 
 export function cliClient(workspace: string): CommandRunner {
   return (command, options = {}) =>
     new Promise((accept, reject) => {
-      const args = [new URL('../cli.mts', import.meta.url).pathname, command, '--workspace', workspace, '--json'];
+      const args = [fileURLToPath(new URL('../cli.mts', import.meta.url)), command, '--workspace', workspace, '--json'];
       for (const [key, value] of Object.entries(options)) {
         if (value === false) continue;
         args.push(`--${key}`);

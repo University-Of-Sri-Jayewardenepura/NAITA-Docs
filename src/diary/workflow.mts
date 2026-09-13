@@ -16,11 +16,30 @@ export function prepareDiary(workspace, options = {}, { persist = true } = {}) {
       : state.repos;
     if (!repos.length) throw new Error('Provide a Git repository with --repo PATH.');
     const author = options.author ?? state.author;
+    if (author !== state.author && state.repos.some((repo) => !repos.includes(repo)))
+      throw new Error(
+        'Changing the author filter requires refreshing all saved repositories. Run import without --repo.',
+      );
+    const fresh = gitHistory(repos, diary.config.trainingStart, diary.config.trainingEnd, author);
+    const commits = new Map();
+    // Refresh only the requested repositories. Evidence from other saved sources
+    // stays available even if those repositories are temporarily offline.
+    for (const commit of state.commits) {
+      const remaining = commit.repos.filter((repo) => !repos.includes(repo));
+      if (remaining.length) commits.set(commit.hash, { ...commit, repos: remaining });
+    }
+    for (const commit of fresh) {
+      const previous = commits.get(commit.hash);
+      commits.set(commit.hash, { ...commit, repos: [...new Set([...(previous?.repos || []), ...commit.repos])] });
+    }
     state = {
       ...state,
-      repos,
+      repos: [...new Set([...state.repos, ...repos])],
       author,
-      commits: gitHistory(repos, diary.config.trainingStart, diary.config.trainingEnd, author),
+      commits: [...commits.values()].sort(
+        (a, b) =>
+          a.date.localeCompare(b.date) || a.authoredAt.localeCompare(b.authoredAt) || a.hash.localeCompare(b.hash),
+      ),
       importedAt: new Date().toISOString(),
     };
   }

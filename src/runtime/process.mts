@@ -15,9 +15,23 @@ export function runSync(command: string[], cwd: string): ProcessResult {
   };
 }
 
-export async function run(command: string[], cwd: string, input = '', timeoutMs = 180000): Promise<ProcessResult> {
+export async function run(
+  command: string[],
+  cwd: string,
+  input = '',
+  timeoutMs = 180000,
+  options: { windowsVerbatimArguments?: boolean } = {},
+): Promise<ProcessResult> {
   if (typeof Bun !== 'undefined') {
-    const child = Bun.spawn({ cmd: command, cwd, stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' });
+    const child = Bun.spawn({
+      cmd: command,
+      cwd,
+      stdin: 'pipe',
+      stdout: 'pipe',
+      stderr: 'pipe',
+      windowsHide: true,
+      ...options,
+    });
     const timer = setTimeout(() => child.kill(), timeoutMs);
     if (input) child.stdin.write(input);
     child.stdin.end();
@@ -30,12 +44,19 @@ export async function run(command: string[], cwd: string, input = '', timeoutMs 
     return { success: code === 0, stdout, stderr };
   }
   return await new Promise((resolve) => {
-    const child = nodeSpawn(command[0], command.slice(1), { cwd });
+    const child = nodeSpawn(command[0], command.slice(1), { cwd, windowsHide: true, ...options });
     let stdout = '';
     let stderr = '';
     child.stdout?.on('data', (chunk) => (stdout += chunk));
     child.stderr?.on('data', (chunk) => (stderr += chunk));
     const timer = setTimeout(() => child.kill(), timeoutMs);
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      resolve({ success: false, stdout, stderr: error.message });
+    });
+    child.stdin?.on('error', (error) => {
+      stderr += error.message;
+    });
     child.on('close', (code) => {
       clearTimeout(timer);
       resolve({ success: code === 0, stdout, stderr });

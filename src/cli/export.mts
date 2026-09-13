@@ -1,6 +1,6 @@
 import { resolve, join } from 'node:path';
 import { prepareDiary, draftWeeks } from '../diary/workflow.mts';
-import { loadDiary } from '../diary/store.mts';
+import { loadDiary, paths } from '../diary/store.mts';
 import { validateProfile } from '../diary/profile.mts';
 import { diaryStatus } from '../diary/status.mts';
 import { renderDiary } from '../pdf/render.mts';
@@ -27,7 +27,7 @@ export async function generate(workspace, options) {
     );
   const result = await renderDiary(
     diary,
-    resolve(options.out || join(workspace, 'output', 'NAITA-Daily-Diary.pdf')),
+    resolve(options.out || join(paths(workspace).output, 'NAITA-Daily-Diary.pdf')),
     options,
   );
   return {

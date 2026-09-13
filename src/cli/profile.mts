@@ -2,7 +2,7 @@ import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { resolve } from 'node:path';
 import { PROFILE_FIELDS } from '../diary/profile.mts';
-import { loadProfile, readJson, saveProfile } from '../diary/store.mts';
+import { loadProfile, readJson, saveProfile, ensureWeeks } from '../diary/store.mts';
 
 export async function ask(question, defaultValue = '') {
   if (!stdin.isTTY)
@@ -26,6 +26,9 @@ export async function profileCommand(workspace, options, interactive = false) {
   } else if (options.text !== undefined) throw new Error('--text requires --field.');
   if (interactive && !options.from)
     for (const [key, label] of Object.entries(PROFILE_FIELDS)) config[key] = await ask(label, config[key]);
-  if (interactive || options.from || options.field) saveProfile(workspace, config);
+  if (interactive || options.from || options.field) {
+    saveProfile(workspace, config);
+    if (config.trainingStart && config.trainingEnd) ensureWeeks(workspace);
+  }
   return config;
 }
