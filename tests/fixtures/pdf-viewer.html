@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>NAITA PDF verification</title>
+  <style>
+    body {
+      margin: 0;
+      background: #d8dce2;
+      color: #18202c;
+      font: 16px system-ui;
+    }
+    nav {
+      padding: 16px;
+      background: #fff;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    input {
+      width: 60px;
+      font: inherit;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background: white;
+      box-shadow: 0 2px 10px #0003;
+    }
+    #pdf-text {
+      position: absolute;
+      left: -10000px;
+    }
+  </style>
+  <nav>
+    <label>Page <input id="page" type="number" value="1" min="1" /></label><span id="count"></span
+    ><span id="state">Loading PDF</span>
+  </nav>
+  <canvas aria-label="Rendered diary page"></canvas>
+  <div id="pdf-text"></div>
+  <script type="module">
+    import { getDocument, GlobalWorkerOptions } from '/pdf.mjs';
+    GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+    const pdf = await getDocument({ url: '/diary.pdf' }).promise;
+    const input = document.querySelector('input');
+    const canvas = document.querySelector('canvas');
+    document.querySelector('#count').textContent = `of ${pdf.numPages}`;
+    input.max = pdf.numPages;
+    async function render(number) {
+      document.querySelector('#state').textContent = 'Rendering';
+      const page = await pdf.getPage(number);
+      const viewport = page.getViewport({ scale: 1.25 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      const text = await page.getTextContent();
+      window.pageItems = text.items;
+      document.querySelector('#pdf-text').textContent = text.items.map((item) => item.str || '').join(' ');
+      document.querySelector('#state').textContent = `Rendered page ${number}`;
+    }
+    input.addEventListener('change', () => {
+      void render(Number(input.value));
+    });
+    await render(1);
+  </script>
+</html>

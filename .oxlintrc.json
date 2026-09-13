@@ -1,0 +1,7 @@
+{
+  "env": { "builtin": true, "node": true, "es2022": true },
+  "rules": {
+    "no-unused-vars": "error",
+    "no-useless-spread": "error"
+  }
+}
