@@ -40,6 +40,11 @@ export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
           description: 'Create a draft or a completed diary using the supplied template',
           action: exportMenu,
         },
+        {
+          name: 'Generate industrial training report',
+          description: 'Create a report from the diary, evidence, logo, and screenshots',
+          action: reportMenu,
+        },
         { name: 'Refresh status', action: home },
         { name: 'Exit', action: () => renderer.destroy() },
       ],
@@ -130,6 +135,27 @@ export function createDiaryApp(renderer: CliRenderer, run: CommandRunner) {
       [
         { name: 'Export a draft', action: () => exportPdf(false) },
         { name: 'Export completed diary', action: () => exportPdf(true) },
+      ],
+      home,
+    );
+  }
+  function reportMenu() {
+    const createReport = async () => {
+      const result = await run('report');
+      const profile = result.missing?.profile?.join(', ') || 'none';
+      ui.show(
+        'Report created',
+        `${result.message}\nProfile fields still blank: ${profile}\nEditable source: ${result.sourcePath}`,
+        [{ name: 'Back to home', action: home }],
+        home,
+      );
+    };
+    ui.show(
+      'Generate industrial training report',
+      'The report is generated from the diary workspace. Missing academic and company facts stay as placeholders.',
+      [
+        { name: 'Create report draft', action: createReport },
+        { name: 'Back', action: home },
       ],
       home,
     );

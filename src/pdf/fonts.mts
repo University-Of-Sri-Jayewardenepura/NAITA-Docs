@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import fontkit from '@pdf-lib/fontkit';
 
 export function findTimesFont(explicit) {
@@ -25,12 +25,46 @@ export function findTimesFont(explicit) {
     );
   return path;
 }
-export async function embedTimes(pdf, explicit) {
-  const path = findTimesFont(explicit);
+function siblingFont(regular, names) {
+  const directory = dirname(regular);
+  return names.map((name) => join(directory, name)).find((path) => existsSync(path));
+}
+export function findTimesFamily(explicit) {
+  const regular = findTimesFont(explicit);
+  const family = {
+    regular,
+    bold: siblingFont(regular, ['Times New Roman Bold.ttf', 'timesbd.ttf']),
+    italic: siblingFont(regular, ['Times New Roman Italic.ttf', 'timesi.ttf']),
+    boldItalic: siblingFont(regular, ['Times New Roman Bold Italic.ttf', 'timesbi.ttf']),
+  };
+  const missing = Object.entries(family)
+    .filter(([, path]) => !path)
+    .map(([name]) => name);
+  if (missing.length)
+    throw new Error(
+      `Times New Roman variants are missing: ${missing.join(', ')}. Install the full font family or pass --font.`,
+    );
+  return family;
+}
+async function embedFont(pdf, path) {
   const bytes = readFileSync(path);
   const metadata = fontkit.create(bytes);
   if (!/TimesNewRoman|Times New Roman/i.test(`${metadata.familyName} ${metadata.postscriptName}`))
-    throw new Error('--font must point to a Times New Roman font.');
+    throw new Error(`Font is not Times New Roman: ${path}`);
+  return pdf.embedFont(bytes, { subset: true });
+}
+export async function embedTimesFamily(pdf, explicit) {
+  const paths = findTimesFamily(explicit);
   pdf.registerFontkit(fontkit);
-  return { font: await pdf.embedFont(bytes, { subset: true }), path };
+  return {
+    regular: await embedFont(pdf, paths.regular),
+    bold: await embedFont(pdf, paths.bold),
+    italic: await embedFont(pdf, paths.italic),
+    boldItalic: await embedFont(pdf, paths.boldItalic),
+    paths,
+  };
+}
+export async function embedTimes(pdf, explicit) {
+  const family = await embedTimesFamily(pdf, explicit);
+  return { font: family.regular, path: family.paths.regular };
 }

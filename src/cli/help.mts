@@ -46,6 +46,8 @@ Agent workflow and PDF
            [--agent codex|claude]        Save agent proposals before exporting
            [--dry-run]                  Return JSON without changing files
   export                                 Alias for generate
+  report [--out FILE.pdf] [--logo FILE] [--font times.ttf]
+                                         Generate the report from diary data and screenshots
 
 Sections: work, problems, solutions, learning, improvements.
 Dates: YYYY-MM-DD, comma-separated or inclusive START..END ranges.
@@ -61,4 +63,7 @@ the next command; help, agent-guide, and generate --dry-run do not write logs.
 Init/import and normal commands refresh local/CHECKLIST.md and checklist.json.
 Import also prints the checklist. Write notes first; add screenshots last, then
 review/export. Capture ideas are optional, not proof of a screen or test result.
+Report PDF: local/report/output/NAITA-Industrial-Training-Report-Pruthivi-Thejan-draft.pdf.
+Report generation preserves missing academic and company facts as placeholders
+and reports the remaining inputs in the CLI result.
 `;

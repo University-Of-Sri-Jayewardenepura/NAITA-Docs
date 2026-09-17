@@ -74,6 +74,29 @@ use `checklist --week NUMBER --json` rather than editing those reports.
    enforce completed weeks with `generate --strict`.
    Exports default to `local/output/NAITA-Daily-Diary.pdf` and use cached evidence.
 
+## Report generation
+
+The report is a separate document built from the same local profile, weekly
+entries, cached Git evidence, and reviewed screenshots. Generate a draft with:
+
+```sh
+bun run cli -- report --json
+```
+
+The report command writes to `local/report/output/`, uses the supplied logo at
+`local/report/usjp.jpg` when present, preserves missing academic/company facts
+as placeholders, and returns missing profile fields and incomplete diary weeks
+in its JSON result. Keep the editable source under `local/report/drafts/`; do
+not treat a `-final.pdf` filename as proof that the checklist is complete.
+
+Agents can use the CLI as their document interface. `draft --agent codex` and
+`draft --agent claude` ask the installed writing agent for validated diary
+proposals; the agent output stays separate until the student accepts it. The
+same agents can invoke `bun run cli -- report` from the workspace to generate a
+report from the current local data. The OpenTUI terminal app calls these same
+CLI commands through `src/tui/client.ts`, so terminal users, Codex, and Claude
+share one persistence and validation path.
+
 Do not fill trainee signatures, engineer comments, certification, inspection
 reports, supervisor comments, or official leave totals. The CLI keeps those areas
 blank. Dates and PDF placement belong to the CLI, not the writing agent.

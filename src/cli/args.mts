@@ -35,6 +35,7 @@ const commandOptions = {
     'agent',
     'agent-command',
   ],
+  report: ['out', 'font', 'logo'],
 };
 export function parseArgs(argv) {
   const args = argv[0] === '--' ? argv.slice(1) : argv;

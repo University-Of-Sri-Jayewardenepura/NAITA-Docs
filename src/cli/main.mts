@@ -12,6 +12,7 @@ import { agentContext, agentPrompt } from '../ai/prompt.mts';
 import { paths, hasLegacyData, initializeLocal } from '../diary/paths.mts';
 import { checkpoint, readHistory } from '../diary/history.mts';
 import { createChecklist, formatChecklist, saveChecklist } from '../diary/checklist.mts';
+import { formatReport, reportCommand } from './report.mts';
 
 export async function execute(command, options = {}) {
   const workspace = resolve(options.workspace || process.cwd());
@@ -36,11 +37,11 @@ export async function execute(command, options = {}) {
       {
         ...details,
         outcome: 'success',
-        ...(command === 'generate'
+        ...(['generate', 'report'].includes(command)
           ? { output: { path: result.path, pages: result.pages, complete: result.complete } }
           : {}),
       },
-      command === 'generate',
+      ['generate', 'report'].includes(command),
     );
     if (command === 'checklist' || existsSync(paths(workspace).profile)) {
       try {
@@ -143,6 +144,7 @@ async function dispatch(command, workspace, options) {
   if (['add', 'edit', 'accept', 'dismiss', 'review', 'screenshots'].includes(command))
     return weeklyCommand(command, workspace, options);
   if (command === 'generate') return generate(workspace, options);
+  if (command === 'report') return reportCommand(workspace, options);
   throw new Error(`Unknown command: ${command}`);
 }
 export async function main(argv = process.argv.slice(2)) {
@@ -150,6 +152,7 @@ export async function main(argv = process.argv.slice(2)) {
   const result = await execute(command, options);
   if (options.json || (command === 'generate' && options['dry-run'])) console.log(JSON.stringify(result, null, 2));
   else if (command === 'status') console.log(formatStatus(result));
+  else if (command === 'report') console.log(formatReport(result));
   else if (command === 'checklist') console.log(formatChecklist(result, { markdown: false }));
   else if (command === 'import' && result.checklist)
     console.log(`${result.message}\n\n${formatChecklist(result.checklist, { markdown: false })}`);

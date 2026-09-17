@@ -142,6 +142,22 @@ export class WeekScreens {
           await back();
         },
       },
+      {
+        name: 'Ask Codex to draft suggestions',
+        description: 'Codex returns reviewable proposals; accepted points stay separate',
+        action: async () => {
+          await this.run('draft', { week: String(number), agent: 'codex' });
+          await back();
+        },
+      },
+      {
+        name: 'Ask Claude Code to draft suggestions',
+        description: 'Claude Code returns reviewable proposals; accepted points stay separate',
+        action: async () => {
+          await this.run('draft', { week: String(number), agent: 'claude' });
+          await back();
+        },
+      },
     ];
     for (const suggestion of week.entry.suggestions)
       choices.push({
